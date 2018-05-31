@@ -87,13 +87,15 @@ void BlackjackGame::executeDoubleDown(bool doOrig)
 	}
 	if (!currentPlayer.didSplit)
 	{
+		currentPlayer.didDoubleDown = true;
 		switchPlayer();
 	}
 	else
 	{
+		currentPlayer.didDoubleDown = true;
 		currentPlayer.resetDidSplit();
 	}
-	currentPlayer.didDoubleDown = true;
+	
 }
 
 
@@ -162,25 +164,27 @@ BlackjackGame::RoundResult BlackjackGame::calcWinner()
 	result.player2 = secondPlayer.getName();
 	//Player 1's best hand
 	if (!currentPlayer.playerHand.isBust() &&
-		currentPlayer.playerHand.getValue() >= currentPlayer.splitHand.getValue())
+		currentPlayer.playerHand.getValue() >= 
+		(currentPlayer.splitHand.getValue() && !currentPlayer.splitHand.isBust()))
 	{
 		bestCurrentPlayerHand = currentPlayer.playerHand;
 	}	
-	else if(!currentPlayer.splitHand.isEmpty() && !currentPlayer.splitHand.isBust())
+	else if(!currentPlayer.splitHand.isBust())
 		bestCurrentPlayerHand = currentPlayer.splitHand;
 	//Player 2's best hand
 	if (!secondPlayer.playerHand.isBust() &&
-		secondPlayer.playerHand.getValue() >= secondPlayer.splitHand.getValue())
+		secondPlayer.playerHand.getValue() >= 
+		(secondPlayer.splitHand.getValue() && !secondPlayer.splitHand.isBust()))
 	{
 		bestSecondPlayerHand = secondPlayer.playerHand;
 	}	
-	else if (!secondPlayer.splitHand.isEmpty() && !secondPlayer.splitHand.isBust())
+	else if (!secondPlayer.splitHand.isBust())
 		bestSecondPlayerHand = secondPlayer.splitHand;
 
+	//Notes: if both hands are bust or orig hand is bust & no split hand, the best hand will be empty
+
 	//Player 1 Wins
-	if (!bestCurrentPlayerHand.isBust() &&
-		 (bestCurrentPlayerHand.getValue() > bestSecondPlayerHand.getValue()
-			 || bestSecondPlayerHand.isBust()))
+	if (bestCurrentPlayerHand.getValue() > bestSecondPlayerHand.getValue())
 	{
 		currentPlayer.increasePoints();
 		result.points1++;
@@ -197,9 +201,7 @@ BlackjackGame::RoundResult BlackjackGame::calcWinner()
 		result.winner = currentPlayer.getName();
 	}
 	//Player 2 Wins
-	if (!bestSecondPlayerHand.isBust() &&
-		 (bestSecondPlayerHand.getValue() > bestCurrentPlayerHand.getValue()
-			 || bestCurrentPlayerHand.isBust()))
+	if (bestSecondPlayerHand.getValue() > bestCurrentPlayerHand.getValue())
 	{
 		secondPlayer.increasePoints();
 		result.points2++;
@@ -215,8 +217,8 @@ BlackjackGame::RoundResult BlackjackGame::calcWinner()
 		}
 		result.winner = secondPlayer.getName();
 	}
-	//Tie
-	if (!bestCurrentPlayerHand.isBust() && !bestSecondPlayerHand.isBust() &&
+	//Tie: no points if both players bust
+	if (!bestCurrentPlayerHand.isEmpty() && !bestSecondPlayerHand.isEmpty() &&
 		bestCurrentPlayerHand.getValue() == bestSecondPlayerHand.getValue())
 	{
 		currentPlayer.increasePoints();

@@ -14,7 +14,7 @@ public:
 	//Print out rules
 	static void rules();
 	//Print out available options during the game
-	static void gameOptions(bool canHit, bool canDouble, bool canSplit);
+	static void gameOptions(BlackjackGame, bool canHit, bool canDouble, bool canSplit);
 	//Print game state
 	static void printGameState(BlackjackGame, bool didSplit1, bool didSplit2);
 	//Print results screen

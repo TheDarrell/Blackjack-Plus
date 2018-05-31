@@ -26,7 +26,10 @@ int Hand::getValue()
 	{
 		if (c.rank == Card::Ace)
 			counter++;
-		value = value + c.rank;
+		if (c.rank > 10)
+			value = value + 10;//All face cards are worth 10
+		else
+			value = value + c.rank;
 	}
 	if(value < 21)//Ace can be worth 1 or 11
 	{

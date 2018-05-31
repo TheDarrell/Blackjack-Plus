@@ -17,10 +17,11 @@ void BlackjackView::rules()
 	cout << "------------------------" << endl;
 	cout << "\nGoal:" << endl;
 		cout << "\tThe goal is to get as close to 21 as possible, without going over 21 (bust)." << endl;
-		cout << "\tWhichever player is closer to 21 without going bust gets 1 point for the round. Both" << endl;
-		cout << "\tplayers get points if there is a tie. Game keeps going until there are no more" << endl;
-		cout << "\tcards left in the deck. Whoever wins the last round gets a bonus point. Player with the " << endl;
-		cout << "\tmost points win the game." << endl;
+		cout << "\tWhichever player is closer to 21 without going bust gets 1 point for the round." << endl;
+		cout << "\tAce is worth 1 or 11, face cards are worth 10, other cards are worth by their number." << endl;
+		cout << "\n\tBoth players get points if there is a tie, but no points if bust. Game keeps going until" << endl;
+		cout << "\tthere are no more cards left in the deck. Whoever wins the last round gets a bonus point." << endl;
+		cout << "\tPlayer with the most points win the game." << endl;
 
 	cout << "\nGame Flow:" << endl;
 		cout << "\tGame starts with each player given 2 cards. If the deck only has 1 card left, the" << endl;
@@ -39,20 +40,21 @@ void BlackjackView::rules()
 			cout << "\n\t\tThe player has the option to split if the original 2 cards are a pair." << endl;
 			cout << "\t\tEach card counts as a separate hand and can hit or stay individually. Only 1 of them" << endl;
 			cout << "\t\thas to win or tie to get 1 point for the round." << endl;
-		cout << "\n\tCalculates who win in the round after both players complete their actions." << endl;
+		cout << "\n\tCalculates who win in the round after both players complete their actions. Each player can" << endl;
+		cout << "\tgo first every other round." << endl;
 }
 
-void BlackjackView::gameOptions(bool canHit, bool canDouble, bool canSplit)
+void BlackjackView::gameOptions(BlackjackGame game, bool canHit, bool canDouble, bool canSplit)
 {
 	int counter = 2;
-	cout << "\nWhat to do?" << endl;
+	cout << "\nWhat will "<< game.getCurrentPlayer().getName() << " do?" << endl;
 	cout << "1. Stay" << endl;
 	if (canHit)
 	{
 		cout << counter << ". Hit" << endl;
 		counter++;
 	}
-	else if (canDouble)
+	if (canDouble)
 	{
 		cout << counter << ". Double Down" << endl;
 		counter++;
@@ -87,7 +89,7 @@ void BlackjackView::printGameState(BlackjackGame game, bool didSplit1, bool didS
 void BlackjackView::printRoundResults(BlackjackGame game, BlackjackGame::RoundResult result, bool didSplit1, bool didSplit2)
 {
 	cout << "-----------------------------------------" << endl;
-	cout << "Round " << game.getRound() << " End!"<< endl;
+	cout << "Round " << game.getRound() - 1 << " End!"<< endl;
 	cout << "-----------------------------------------" << endl;
 	cout << game.getCurrentPlayer().getName() << " Hand: " << game.getCurrentPlayer().playerHand.toString()
 		<< " Value: " << game.getCurrentPlayer().playerHand.getValue() << endl;

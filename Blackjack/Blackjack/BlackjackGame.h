@@ -32,6 +32,7 @@ public:
 	int getRound();
 	int getSwitchCounter();
 	void resetSwitchCounter();
+	void switchPlayer();
 	~BlackjackGame();
 private:
 	Deck deck;
@@ -43,7 +44,7 @@ private:
 	bool isComp;
 	int switchCounter;
 	
-	void switchPlayer();
+	
 	
 	
 };

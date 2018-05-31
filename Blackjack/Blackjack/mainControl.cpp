@@ -9,11 +9,11 @@
 
 using namespace std;
 
-std::string getMainMenuInput();
+string getMainMenuInput();
 bool executeMainMenu(std::string option);
-static inline void trim(std::string &s);
-std::string getGameOptionInput(bool canHit, bool canDouble, bool canSplit);
-bool executeGameOption(std::string option, BlackjackGame& game, bool doOrig);
+string removeSpaces(string);
+string getGameOptionInput(BlackjackGame game,bool canHit, bool canDouble, bool canSplit);
+bool executeGameOption(string option, BlackjackGame& game, bool doOrig);
 void startGame(BlackjackGame game, bool isAI);
 
 int main()
@@ -26,13 +26,13 @@ int main()
 std::string getMainMenuInput()
 {
 	bool check = false;
-	std::string mainOption = "";
+	string mainOption = "";
 	
 	do {
 		BlackjackView::mainMenu();
 		cin >> mainOption;
-		trim(mainOption);
-		std::transform(mainOption.begin(), mainOption.end(), mainOption.begin(), ::tolower);
+		mainOption = removeSpaces(mainOption);
+		transform(mainOption.begin(), mainOption.end(), mainOption.begin(), tolower);
 		if (mainOption == "human" || mainOption == "ai" ||
 			mainOption == "rules" || mainOption == "quit")
 		{
@@ -41,7 +41,7 @@ std::string getMainMenuInput()
 		else
 		{
 			cin.clear();
-			cin.ignore();
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
 			cout << "Input must be human, ai, rules, or quit!" << endl;
 		}
 	} while (!check);
@@ -62,8 +62,6 @@ bool executeMainMenu(std::string option)
 	{
 		BlackjackView::rules();
 		cout << "\nPress enter to go back!" << endl;
-		//std::string stall = "";
-		//cin >> stall;
 		cin.get();
 		cin.get();
 	}
@@ -81,8 +79,8 @@ void startGame(BlackjackGame game, bool isAI)
 	while (!game.isFinsihed() && !doSurrender)
 	{
 		game.drawSequence();
-		bool didSplit1 = false;
-		bool didSplit2 = false;
+		bool didSplitCurrent = false;
+		bool didSplitSecond = false;
 		bool canDouble = false;
 		bool canSplit = false;
 		bool canHit = true;
@@ -90,40 +88,53 @@ void startGame(BlackjackGame game, bool isAI)
 		while (game.getSwitchCounter() < 2 && !doSurrender)//Keep going until both players complete their turns
 		{
 			//Once it sets true, need to keep it true in order to print out split hand
-			if (!didSplit1)
-				didSplit1 = game.getCurrentPlayer().didSplit;
-			if (!didSplit2)
-				didSplit2 = game.getSecondPlayer().didSplit;
+			if (!didSplitCurrent)
+				didSplitCurrent = game.getCurrentPlayer().didSplit;
+			if (!didSplitSecond)
+				didSplitSecond = game.getSecondPlayer().didSplit;
 
 			//A way for non-split turns to do original hand only &
 			//split turns to do original first, then split hand
-			if(didSplit1)
+			if(didSplitCurrent)
 				doOrig = game.getCurrentPlayer().didSplit;
 			else
 				doOrig = !game.getCurrentPlayer().didSplit;
 
 			//Determine to use original hand or split hand
-			//doOrig = !game.getCurrentPlayer().didSplit;//Needs rework
 			if (doOrig)
 			{
 				canDouble = game.getCurrentPlayer().playerHand.canDoubleDown();
-				canSplit = game.getCurrentPlayer().playerHand.canSplit();
+				if (didSplitCurrent)//If split occurs, don't let the same player split again
+					canSplit = false;
+				else
+					canSplit = game.getCurrentPlayer().playerHand.canSplit();
 				canHit = !game.isFinsihed() && !game.getCurrentPlayer().playerHand.isBust();
 			}
 			else
 			{
 				canDouble = game.getCurrentPlayer().splitHand.canDoubleDown();
-				canSplit = game.getCurrentPlayer().splitHand.canSplit();
+				if (didSplitCurrent)//If split occurs, don't let the same player split again
+					canSplit = false;
+				else
+					canSplit = game.getCurrentPlayer().splitHand.canSplit();
 				canHit = !game.isFinsihed() && !game.getCurrentPlayer().splitHand.isBust();
 			}
-			BlackjackView::printGameState(game, didSplit1, didSplit2);
-			//BlackjackView::gameOptions(canHit, canDouble, canSplit);
-			doSurrender = executeGameOption(getGameOptionInput(canHit, canDouble, canSplit), game, doOrig);
+			BlackjackView::printGameState(game, didSplitCurrent, didSplitSecond);
+			int switchCheck = game.getSwitchCounter();
+			doSurrender = executeGameOption(getGameOptionInput(game, canHit, canDouble, canSplit), game, doOrig);
+			if (switchCheck != game.getSwitchCounter())//if Switching occurs, also switch the values for didSplit
+			{
+				bool temp = didSplitCurrent;
+				didSplitCurrent = didSplitSecond;
+				didSplitSecond = temp;
+			}
+
 		}
 		if (!doSurrender)
 		{
+			game.switchPlayer(); //Each player take turns going first
 			game.resetSwitchCounter();
-			BlackjackView::printRoundResults(game, game.calcWinner(), didSplit1, didSplit2);
+			BlackjackView::printRoundResults(game, game.calcWinner(), didSplitCurrent, didSplitSecond);
 			cout << endl;
 		}
 		
@@ -138,16 +149,16 @@ void startGame(BlackjackGame game, bool isAI)
 
 }
 
-std::string getGameOptionInput(bool canHit, bool canDouble, bool canSplit)
+std::string getGameOptionInput(BlackjackGame game, bool canHit, bool canDouble, bool canSplit)
 {
 	bool check = false;
-	std::string gameOption = "";
+	string gameOption = "";
 
 	do {
-		BlackjackView::gameOptions(canHit, canDouble, canSplit);
+		BlackjackView::gameOptions(game, canHit, canDouble, canSplit);
 		cin >> gameOption;
-		trim(gameOption);
-		std::transform(gameOption.begin(), gameOption.end(), gameOption.begin(), ::tolower);
+		gameOption = removeSpaces(gameOption);
+		transform(gameOption.begin(), gameOption.end(), gameOption.begin(), tolower);
 		if (gameOption == "stay" || (gameOption == "hit" && canHit) || (gameOption == "split" && canSplit)
 			|| (gameOption == "doubledown" && canDouble) || gameOption == "surrender")
 		{
@@ -156,8 +167,8 @@ std::string getGameOptionInput(bool canHit, bool canDouble, bool canSplit)
 		else
 		{
 			cin.clear();
-			cin.ignore();
-			std::string valid = "";
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			string valid = "";
 			if (canHit)
 				valid = valid + ", hit";
 			if (canSplit)
@@ -170,7 +181,7 @@ std::string getGameOptionInput(bool canHit, bool canDouble, bool canSplit)
 	return gameOption;
 }
 
-bool executeGameOption(std::string option, BlackjackGame& game, bool doOrig)
+bool executeGameOption(string option, BlackjackGame& game, bool doOrig)
 {
 	if (option == "stay")
 	{
@@ -197,20 +208,9 @@ bool executeGameOption(std::string option, BlackjackGame& game, bool doOrig)
 	return false;
 }
 
-// trim from start (in place)
-static inline void ltrim(std::string &s) {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-		std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
-
-// trim from end (in place)
-static inline void rtrim(std::string &s) {
-	s.erase(std::find_if(s.rbegin(), s.rend(),
-		std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-}
-
-// trim from both ends (in place)
-static inline void trim(std::string &s) {
-	ltrim(s);
-	rtrim(s);
+// Function to remove all spaces from a given string
+string removeSpaces(string str)
+{
+	str.erase(remove(str.begin(), str.end(), ' '), str.end());
+	return str;
 }
