@@ -1,0 +1,3 @@
+﻿  Deck.cpp
+c:\users\darrell\source\repos\blackjack\blackjack\deck.cpp(17): warning C4244: '=': conversion from 'std::chrono::system_clock::rep' to 'unsigned int', possible loss of data
+  Blackjack.vcxproj -> C:\Users\darrell\source\repos\Blackjack\Debug\BlackjackPlus.exe
